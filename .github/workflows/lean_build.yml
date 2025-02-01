@@ -22,4 +22,18 @@ jobs:
       run: lake exe cache get
 
     - name: build library
-      run: lake build Library
+      id: build
+      continue-on-error: true
+      run: |
+        lake build Library
+        if [ $? -eq 0 ]; then
+          echo "status=success" >> $GITHUB_OUTPUT
+        else
+          echo "status=failure" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Check build status
+      if: steps.build.outputs.status == 'failure'
+      run: |
+        echo "::error::Lean compilation failed. Please check your code for errors."
+        exit 1
